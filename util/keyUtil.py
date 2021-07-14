@@ -1,6 +1,7 @@
 import datetime
 import pickle
 
+from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography import x509
@@ -153,3 +154,103 @@ def verify_csr(client_public_key, csr_to_check):
         padding.PKCS1v15(),
         csr_to_check.signature_hash_algorithm,
     )
+
+def verify_crt(issuer_public_key, cert_to_check):
+    issuer_public_key.verify(
+        cert_to_check.signature,
+        cert_to_check.tbs_certificate_bytes,
+        # Depends on the algorithm used to create the certificate
+        padding.PKCS1v15(),
+        cert_to_check.signature_hash_algorithm,
+    )
+
+def generate_Fernet_key():
+    key = Fernet.generate_key()
+    return key
+
+def encrypt_message(message, key):
+    f = Fernet(key)
+    encrypted_message = f.encrypt(message)
+    return encrypted_message
+
+def decrypt_message(encrypted_message, key):
+    f = Fernet(key)
+    decrypted_message = f.decrypt(encrypted_message)
+    return decrypted_message
+
+
+
+def encrypt_with_public_key(puk, data):
+    message = pickle.dumps(data)
+    ciphertext = puk.encrypt(
+        message,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return ciphertext
+
+
+def decrypt_with_private_key(prk, ciphertext):
+    plaintext = prk.decrypt(
+        ciphertext,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return pickle.loads(plaintext)
+
+
+def sign_with_private_key(prk, digest):
+    digest = pickle.dumps(digest)
+    sig = prk.sign(
+        digest,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    return sig
+
+
+def verify_with_public_key(puk, signature, message):
+    puk.verify(
+        signature,
+        pickle.dumps(message),
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+def sign_with_private_key2(prk, digest):
+    digestt = pickle.dumps(digest)
+    sig = prk.sign(
+        digestt,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    return digest
+
+
+def verify_with_public_key2(puk, signature, message):
+    try:
+        puk.verify(
+            signature,
+            pickle.dumps(message),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+    except:
+        pass
