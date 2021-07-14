@@ -169,6 +169,7 @@ def generate_Fernet_key():
     return key
 
 def encrypt_message(message, key):
+    message = pickle.dumps(message)
     f = Fernet(key)
     encrypted_message = f.encrypt(message)
     return encrypted_message
@@ -176,7 +177,7 @@ def encrypt_message(message, key):
 def decrypt_message(encrypted_message, key):
     f = Fernet(key)
     decrypted_message = f.decrypt(encrypted_message)
-    return decrypted_message
+    return pickle.loads(decrypted_message)
 
 
 
@@ -205,17 +206,17 @@ def decrypt_with_private_key(prk, ciphertext):
     return pickle.loads(plaintext)
 
 
-def sign_with_private_key(prk, digest):
-    digest = pickle.dumps(digest)
-    sig = prk.sign(
-        digest,
+def sign_with_private_key(prk, message):
+    message = pickle.dumps(message)
+    signature = prk.sign(
+        message,
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
             salt_length=padding.PSS.MAX_LENGTH
         ),
         hashes.SHA256()
     )
-    return sig
+    return signature
 
 
 def verify_with_public_key(puk, signature, message):
@@ -228,29 +229,3 @@ def verify_with_public_key(puk, signature, message):
         ),
         hashes.SHA256()
     )
-def sign_with_private_key2(prk, digest):
-    digestt = pickle.dumps(digest)
-    sig = prk.sign(
-        digestt,
-        padding.PSS(
-            mgf=padding.MGF1(hashes.SHA256()),
-            salt_length=padding.PSS.MAX_LENGTH
-        ),
-        hashes.SHA256()
-    )
-    return digest
-
-
-def verify_with_public_key2(puk, signature, message):
-    try:
-        puk.verify(
-            signature,
-            pickle.dumps(message),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
-        )
-    except:
-        pass

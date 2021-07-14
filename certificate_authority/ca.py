@@ -5,6 +5,21 @@ from util.keyUtil import *
 from util.my_server import My_server
 
 
+def find_client_public_key_from_my_datasource(ip):
+    path = None
+    if DNS(ip)==DNS.merchant:
+        path = '../merchant/'
+    elif DNS(ip)==DNS.buyer:
+        path = '../buyer/'
+    elif DNS(ip)==DNS.bank:
+        path = '../bank/'
+    elif DNS(ip)==DNS.blockchain:
+        path = '../blockChain/'
+    if path is None: raise Exception("invalid ip")
+    _, client_public_key = load_key_from_file(path)
+    return client_public_key
+
+
 class CA:
     def __init__(self):
         #self.private_key, self.public_key = load_key_from_file('certificate_authority/')
@@ -26,7 +41,7 @@ class CA:
             print("\t",d['csr'])
 
             client_csr = load_csr(d['csr'])
-            client_pk = self.find_client_public_key_from_my_datasource(d["ip"])
+            client_pk = find_client_public_key_from_my_datasource(d["ip"])
             verify_csr(client_pk, client_csr)
             cert = sign_certificate(client_pk, self.private_key)
 
@@ -35,19 +50,6 @@ class CA:
 
             client_socket.close()
 
-    def find_client_public_key_from_my_datasource(self, ip):
-        path = None
-        if DNS(ip)==DNS.merchant:
-            path = '../merchant/'
-        elif DNS(ip)==DNS.buyer:
-            path = '../buyer/'
-        elif DNS(ip)==DNS.bank:
-            path = '../bank/'
-        elif DNS(ip)==DNS.blockchain:
-            path = '../blockChain/'
-        if path is None: raise Exception("invalid ip")
-        _, client_public_key = load_key_from_file(path)
-        return client_public_key
 
 if __name__ == '__main__':
     my_ca = CA()

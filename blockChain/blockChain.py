@@ -66,7 +66,10 @@ class BlockChain():
             self.server.send_data(client_socket, d)
             print(f"secure Connection from {address} has been established with session: {session_key}.")
             if contex == 'delegation':
-                pass
+                d = self.server.recieve_data(client_socket)
+                d = decrypt_message(d['message'], session_key)
+                print(d)
+
             else:
                 pass
 

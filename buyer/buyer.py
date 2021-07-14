@@ -1,5 +1,6 @@
 import random
 
+from certificate_authority.ca import find_client_public_key_from_my_datasource
 from util.DNS import DNS
 from util.Items_to_buy import items_to_buy
 from util.keyUtil import *
@@ -58,6 +59,14 @@ class Buyer:
             print('reply attack')
         session_key = d['session_key']
 
+        skm, pkm = generate_key()
+        policy = {'range': price, 'count': 1, 'time': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+                  'receiver': DNS.merchant.value}
+        deligation = {'pkd': find_client_public_key_from_my_datasource(DNS.merchant.value).public_bytes(encoding=serialization.Encoding.PEM,  format=serialization.PublicFormat.SubjectPublicKeyInfo ), 'pkm': pkm.public_bytes(encoding=serialization.Encoding.PEM,  format=serialization.PublicFormat.SubjectPublicKeyInfo ),
+                      'policy': policy, 'sig': sign_with_private_key(skm, {
+                'pkd': find_client_public_key_from_my_datasource(DNS.merchant.value).public_bytes(encoding=serialization.Encoding.PEM,  format=serialization.PublicFormat.SubjectPublicKeyInfo ), 'policy': policy})}
+        d = {'ip':self.ip, 'message': encrypt_message(deligation, session_key)}
+        blockChain_client.send_data(blockChain_client.client_socket, d)
         blockChain_client.close_client()
 
 
