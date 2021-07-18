@@ -36,7 +36,7 @@ class Buyer:
         time_stamp, naunce = datetime.datetime.utcnow(), random.randint(0, 1000000)
         d = {'ip': self.ip, 'message': 'delegation', 'naunce': naunce}
         blockChain_client.send_data(blockChain_client.client_socket, d)
-        # 22
+        # 2
         d = blockChain_client.recieve_data(blockChain_client.client_socket)
         peer_cert = load_cert(d['cert'])
         peer_naunce = d['naunce']
